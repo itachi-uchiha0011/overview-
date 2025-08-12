@@ -1,0 +1,35 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: 255 255 255;
+  --fg: 20 23 28;
+  --primary: 255 99 132;
+}
+
+.dark :root {
+  --bg: 10 10 12;
+  --fg: 240 240 244;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  background-color: rgb(var(--bg));
+  color: rgb(var(--fg));
+}
+
+/*****************************
+ Lovable cursor animation
+******************************/
+.cursor-bounce {
+  animation: bounce 1.5s infinite ease-in-out;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
