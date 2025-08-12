@@ -1,0 +1,53 @@
+version: "3.9"
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: overview
+      POSTGRES_PASSWORD: overview
+      POSTGRES_DB: overview
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+  backend:
+    build: ./backend
+    environment:
+      - FLASK_ENV=development
+      - DATABASE_URL=postgresql+psycopg2://overview:overview@db:5432/overview
+      - REDIS_URL=redis://redis:6379/0
+      - SOCKETIO_MESSAGE_QUEUE=redis://redis:6379/2
+      - CELERY_BROKER_URL=redis://redis:6379/3
+      - CELERY_RESULT_BACKEND=redis://redis:6379/4
+      - CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
+    ports:
+      - "5000:5000"
+    depends_on:
+      - db
+      - redis
+  celery_worker:
+    build: ./backend
+    command: bash -lc "celery -A tasks.celery_app.celery_app worker -l info"
+    environment:
+      - DATABASE_URL=postgresql+psycopg2://overview:overview@db:5432/overview
+      - CELERY_BROKER_URL=redis://redis:6379/3
+      - CELERY_RESULT_BACKEND=redis://redis:6379/4
+    depends_on:
+      - db
+      - redis
+  celery_beat:
+    build: ./backend
+    command: bash -lc "celery -A tasks.celery_app.celery_app beat -l info"
+    environment:
+      - DATABASE_URL=postgresql+psycopg2://overview:overview@db:5432/overview
+      - CELERY_BROKER_URL=redis://redis:6379/3
+      - CELERY_RESULT_BACKEND=redis://redis:6379/4
+    depends_on:
+      - db
+      - redis
+volumes:
+  db_data:
